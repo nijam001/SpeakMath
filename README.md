@@ -66,13 +66,9 @@ graph LR
 
 ## 📜 Grammar Design (Week 8)
 
-### Draft BNF/EBNF Grammar
-```ebnf
-<command>     ::= <operation> <expression>
-<operation>   ::= "sum" | "mean" | "multiply" | "max" | "min"
-<expression>  ::= <number> ("," <number>)*
-<number>      ::= [0-9]+ ("." [0-9]+)?
-```
+### Syntax Definition
+
+The formal BNF/EBNF syntax definition has been moved to [docs/syntax_definition.md](docs/syntax_definition.md).
 
 **Planned Extensions:**
 - Variable assignment: `set x to 5`

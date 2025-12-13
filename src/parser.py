@@ -51,24 +51,93 @@ class Parser:
         if c.type == "REDUCE":
             return self.parse_reduce()
         # compute keywords
-        if c.type in ("SUM","MEAN","PRODUCT","MAX","MIN","SORT_ASC","SORT_DESC"):
-            token = self.eat(c.type)
-            phrase = token.value.lower()
-            op = resolve_phrase(phrase) or SEMANTIC_MAP.get(phrase, None)
-            if not op:
-                raise ParseError("Unknown verb: "+phrase)
+    def parse_command(self):
+        c = self.cur()
+        if c.type == "SET":
+            return self.parse_assign()
+        if c.type == "IF":
+            return self.parse_if()
+        if c.type == "PRINT":
+            self.eat("PRINT")
+            expr = self.parse_expression_or_target()
+            return ast.PrintNode(expr)
+        if c.type == "MAP":
+            return self.parse_map()
+        if c.type == "REDUCE":
+            return self.parse_reduce()
+        
+        # Check if it is a known compute keyword or potentially start of a NL phrase
+        # We will attempt to consume a sequence of tokens that could form a verb phrase.
+        # Tokens allowed in verb phrase: IDENTIFIER, keywords (SUM, MEAN, etc), OVER_ON
+        # We stop when we hit: NUMBER, LBRACK, LPAREN, or EOF
+        
+        phrase_tokens = []
+        start_pos = self.pos
+        curr_phrase = ""
+        valid_op = None
+        best_len = 0
+        
+        # Stop-words/Prepositions allowed to extend a valid verb
+        # If we encounter an identifier NOT in this list, and we already have a valid verb, we stop.
+        SAFE_PHRASE_IDS = {
+            "the", "of", "up", "down", "to", "from", "by", "over", "on", "a", "an", "is", "calculate", "find",
+            "these", "those", "this", "that",
+            "items", "values", "numbers", "list", "collection", "set", "elements", "data"
+        }
+        
+        # Look ahead up to 10 tokens to form a phrase
+        for i in range(10):
+            tok = self.look(i)
+            # HARD STOPS: Number, Bracket, Paren, EOF, Keywords that start other structures
+            if tok.type in ("NUMBER", "LBRACK", "LPAREN", "EOF", "SET", "IF", "THEN"):
+                break
+            
+            # SOFT STOP: If we already have a valid op, and this is an "unsafe" identifier (likely a variable), break.
+            # But if valid_op is None (e.g. "calculate"), we must continue.
+            if valid_op and tok.type == "IDENTIFIER" and tok.value.lower() not in SAFE_PHRASE_IDS:
+                break
+                
+            # Add to phrase
+            # For keywords, use the value (e.g. "average"), for identifiers use value
+            part = tok.value
+            if curr_phrase:
+                curr_phrase += " " + part
+            else:
+                curr_phrase = part
+            
+            # Check if this sub-phrase resolves to an op
+            check_res = resolve_phrase(curr_phrase) or SEMANTIC_MAP.get(curr_phrase.lower())
+            
+            check_op = None
+            reasoning = None
+            
+            if isinstance(check_res, dict):
+                check_op = check_res.get("operator")
+                reasoning = check_res.get("reasoning")
+            elif isinstance(check_res, str):
+                check_op = check_res
+                
+            if check_op:
+                valid_op = check_op
+                best_len = i + 1
+                if reasoning:
+                     print(f"  (AI Reasoning: {reasoning})")
+                
+        # If we found a valid op, consume those tokens
+        if valid_op:
+            for _ in range(best_len):
+                self.eat(self.cur().type)
             target = self.parse_expression_or_target()
-            return ast.ComputeNode(op, target)
-        # identifier as verb?
-        if c.type == "IDENTIFIER":
-            # try treating identifier as verb phrase
-            phrase = c.value.lower()
-            op = resolve_phrase(phrase) or SEMANTIC_MAP.get(phrase)
-            if op:
-                self.eat("IDENTIFIER")
-                target = self.parse_expression_or_target()
-                return ast.ComputeNode(op, target)
-        raise ParseError("Unknown command start: "+str(c))
+            return ast.ComputeNode(valid_op, target)
+            
+        # Fallback for single keywords if loop somehow failed to pick them up (unlikely with above logic)
+        # or if they were matched but not extended. 
+        # Actually logic above handles single keywords too (i=0).
+        
+        # If we failed to find any op, error.
+        # But if we had a specific "UNKNOWN" response from LLM for the longest phrase, maybe use that?
+        # For simplicity, just error.
+        raise ParseError(f"Unknown command: '{curr_phrase}' (I don't know that operation)")
 
     def parse_assign(self):
         self.eat("SET")
@@ -102,7 +171,10 @@ class Parser:
             self.eat("OVER_ON")
         target = self.parse_expression_or_target()
         # normalize op to canonical via resolve_phrase
-        op = resolve_phrase(op_phrase) or SEMANTIC_MAP.get(op_phrase, "OP_MAP")
+        op_res = resolve_phrase(op_phrase) or SEMANTIC_MAP.get(op_phrase, "OP_MAP")
+        op = op_res if isinstance(op_res, str) else op_res.get("operator") if isinstance(op_res, dict) else "OP_MAP"
+        if isinstance(op_res, dict) and op_res.get("reasoning"):
+             print(f"  (AI Reasoning: {op_res.get('reasoning')})")
         return ast.MapNode(op, arg, target)
 
     def parse_reduce(self):
@@ -115,7 +187,10 @@ class Parser:
         if self.cur().type == "OVER_ON":
             self.eat("OVER_ON")
         target = self.parse_expression_or_target()
-        op = resolve_phrase(op_phrase) or SEMANTIC_MAP.get(op_phrase, "OP_REDUCE")
+        op_res = resolve_phrase(op_phrase) or SEMANTIC_MAP.get(op_phrase, "OP_REDUCE")
+        op = op_res if isinstance(op_res, str) else op_res.get("operator") if isinstance(op_res, dict) else "OP_REDUCE"
+        if isinstance(op_res, dict) and op_res.get("reasoning"):
+             print(f"  (AI Reasoning: {op_res.get('reasoning')})")
         return ast.ReduceNode(op, target)
 
     def parse_expression_or_target(self):
