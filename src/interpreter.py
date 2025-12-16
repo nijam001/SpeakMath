@@ -35,11 +35,27 @@ class Interpreter:
             val = self.eval(node.expr)
             print(val)
             return val
+        if isinstance(node, ast.LLMResolvedNode):
+            # Handle LLM-resolved nodes by delegating to execute_compute
+            if node.is_llm_resolved:
+                print(f"  ℹ️  LLM Resolution: '{node.original_phrase}' → {node.resolved_op}")
+                if node.reasoning:
+                    print(f"     Reasoning: {node.reasoning}")
+            return self.execute_compute(node.resolved_op, node.target)
         if isinstance(node, ast.ComputeNode):
+            # Log if LLM-resolved
+            if node.is_llm_resolved and node.llm_metadata:
+                print(f"  ℹ️  LLM Resolution: '{node.llm_metadata.get('original_phrase')}' → {node.op}")
+                if node.llm_metadata.get('reasoning'):
+                    print(f"     Reasoning: {node.llm_metadata.get('reasoning')}")
             return self.execute_compute(node.op, node.target)
         if isinstance(node, ast.MapNode):
+            if node.is_llm_resolved and node.llm_metadata:
+                print(f"  ℹ️  LLM Resolution in map: '{node.llm_metadata.get('original_phrase')}' → {node.op}")
             return self.execute_map(node)
         if isinstance(node, ast.ReduceNode):
+            if node.is_llm_resolved and node.llm_metadata:
+                print(f"  ℹ️  LLM Resolution in reduce: '{node.llm_metadata.get('original_phrase')}' → {node.op}")
             return self.execute_reduce(node)
         if isinstance(node, ast.IfNode):
             l = self.eval(node.left); r = self.eval(node.right)
