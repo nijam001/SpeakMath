@@ -62,6 +62,14 @@ class BinaryOpNode(ASTNode):
     def __repr__(self):
         return f"BinaryOpNode({self.left} {self.op} {self.right})"
 
+class FilterNode:
+    def __init__(self, op, value, target):
+        self.op = op
+        self.value = value
+        self.target = target
+    def __repr__(self):
+        return f"FilterNode({self.op}, {self.value}, {self.target})"
+
 class MapNode(ASTNode):
     def __init__(self, op, arg, target):
         self.op = op  # canonical or operation name

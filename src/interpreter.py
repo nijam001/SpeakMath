@@ -46,6 +46,8 @@ class Interpreter:
             if self.compare(l, r, node.comp):
                 return self.eval(node.action)
             return None
+        if isinstance(node, ast.FilterNode):
+             return self.visit_FilterNode(node)
         if isinstance(node, ast.SequenceNode):
             first_out = self.eval(node.first)
             # when second expects input, if it is a ComputeNode with target variable, pass list
@@ -146,3 +148,24 @@ class Interpreter:
             for x in tval: prod*=x
             return prod
         raise SemanticError("Unknown reduce op: "+str(op))
+
+    def visit_FilterNode(self, node):
+        target_val = self.eval(node.target)
+        if not isinstance(target_val, list):
+             raise SemanticError(f"Filter target must be a list, got {target_val}")
+        
+        comp_val = self.eval(node.value)
+        # support standard ops
+        op = node.op
+        
+        res = []
+        for x in target_val:
+            if not isinstance(x, (int, float)): continue
+            if op == ">" and x > comp_val: res.append(x)
+            elif op == "<" and x < comp_val: res.append(x)
+            elif op == ">=" and x >= comp_val: res.append(x)
+            elif op == "<=" and x <= comp_val: res.append(x)
+            elif op == "==" and x == comp_val: res.append(x)
+            elif op == "!=" and x != comp_val: res.append(x)
+            
+        return res

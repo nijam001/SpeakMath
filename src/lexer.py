@@ -19,6 +19,7 @@ TOKEN_SPEC = [
     ("IF",           r"\bif\b"),
     ("THEN",         r"\bthen\b"),
     ("MAP",          r"\bmap\b"),
+    ("FILTER",       r"\bfilter\b"),
     ("REDUCE",       r"\breduce\b"),
     ("SUM",          r"\bsum\b"),
     ("MEAN",         r"\b(mean|average|find the mean)\b"),

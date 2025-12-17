@@ -56,7 +56,19 @@ def resolve_phrase(phrase: str) -> str:
         Phrase: "{phrase}"
         """
         
-        response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+        import concurrent.futures
+        
+        def call_gemini():
+             return model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+
+        try:
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(call_gemini)
+                response = future.result(timeout=5)
+        except concurrent.futures.TimeoutError:
+            print("\n(LLM is not available: Request timed out > 5s)")
+            return None
+            
         import json
         try:
             res = json.loads(response.text.strip())
@@ -72,5 +84,6 @@ def resolve_phrase(phrase: str) -> str:
             return None
         
     except Exception as e:
-        print(f"LLM Error: {e}")
+        # Catch network errors, auth errors, etc.
+        print(f"\n(LLM is not available: {e})")
         return None
