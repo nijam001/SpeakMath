@@ -38,6 +38,19 @@ class Parser:
 
     # compute keywords
     def parse_command(self):
+        # First, try to parse a single command
+        first_cmd = self.parse_single_command()
+        
+        # Check if there's a "then" keyword for composition
+        if self.cur().type == "THEN":
+            self.eat("THEN")
+            second_cmd = self.parse_single_command()
+            return ast.SequenceNode(first_cmd, second_cmd)
+        
+        return first_cmd
+    
+    def parse_single_command(self):
+        """Parse a single command (without composition)"""
         c = self.cur()
         if c.type == "SET":
             return self.parse_assign()
@@ -80,7 +93,8 @@ class Parser:
         for i in range(10):
             tok = self.look(i)
             # HARD STOPS: Number, Bracket, Paren, EOF, Keywords that start other structures
-            if tok.type in ("NUMBER", "LBRACK", "LPAREN", "EOF", "SET", "IF", "THEN"):
+            # Note: THEN is allowed here as it's part of composition, not a stop
+            if tok.type in ("NUMBER", "LBRACK", "LPAREN", "EOF", "SET", "IF"):
                 break
             
             # SOFT STOP: If we already have a valid op, and this is an "unsafe" identifier (likely a variable), break.
