@@ -72,5 +72,6 @@ def resolve_phrase(phrase: str) -> str:
             return None
         
     except Exception as e:
-        print(f"LLM Error: {e}")
+        # Silently fail - system will use grammar-only mode
+        # (Error details available for debugging if needed)
         return None
