@@ -36,4 +36,6 @@ SYNONYM_MAP = {
     "get the smallest": "OP_MIN",
     "echo": "OP_PRINT",
     "show output": "OP_PRINT",
+    "addition": "OP_SUM",
+    "multiplication": "OP_PRODUCT",
 }

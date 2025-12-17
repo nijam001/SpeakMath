@@ -36,6 +36,7 @@ class Parser:
             raise ParseError("Trailing tokens after command: "+str(self.cur()))
         return node
 
+    # compute keywords
     def parse_command(self):
         c = self.cur()
         if c.type == "SET":
@@ -50,21 +51,8 @@ class Parser:
             return self.parse_map()
         if c.type == "REDUCE":
             return self.parse_reduce()
-        # compute keywords
-    def parse_command(self):
-        c = self.cur()
-        if c.type == "SET":
-            return self.parse_assign()
-        if c.type == "IF":
-            return self.parse_if()
-        if c.type == "PRINT":
-            self.eat("PRINT")
-            expr = self.parse_expression_or_target()
-            return ast.PrintNode(expr)
-        if c.type == "MAP":
-            return self.parse_map()
-        if c.type == "REDUCE":
-            return self.parse_reduce()
+        if c.type == "FILTER":
+            return self.parse_filter()
         
         # Check if it is a known compute keyword or potentially start of a NL phrase
         # We will attempt to consume a sequence of tokens that could form a verb phrase.
@@ -75,6 +63,7 @@ class Parser:
         start_pos = self.pos
         curr_phrase = ""
         valid_op = None
+        reasoning = None
         best_len = 0
         
         # Stop-words/Prepositions allowed to extend a valid verb
@@ -82,7 +71,9 @@ class Parser:
         SAFE_PHRASE_IDS = {
             "the", "of", "up", "down", "to", "from", "by", "over", "on", "a", "an", "is", "calculate", "find",
             "these", "those", "this", "that",
-            "items", "values", "numbers", "list", "collection", "set", "elements", "data"
+            "items", "values", "numbers", "list", "collection", "set", "elements", "data",
+            "lowest", "highest", "smallest", "largest", "biggest", "ascending", "descending", "low", "high",
+            "addition", "subtraction", "multiplication", "division"
         }
         
         # Look ahead up to 10 tokens to form a phrase
@@ -109,22 +100,29 @@ class Parser:
             check_res = resolve_phrase(curr_phrase) or SEMANTIC_MAP.get(curr_phrase.lower())
             
             check_op = None
-            reasoning = None
+            check_reasoning = None
             
             if isinstance(check_res, dict):
                 check_op = check_res.get("operator")
-                reasoning = check_res.get("reasoning")
+                check_reasoning = check_res.get("reasoning")
             elif isinstance(check_res, str):
                 check_op = check_res
                 
             if check_op:
                 valid_op = check_op
                 best_len = i + 1
-                if reasoning:
-                     print(f"  (AI Reasoning: {reasoning})")
+                if check_reasoning:
+                     reasoning = check_reasoning
+            elif valid_op and tok.value.lower() in SAFE_PHRASE_IDS:
+                # Heuristic: If valid verb exists, extend consumption over safe filler words
+                # even if resolution fails for the extended phrase.
+                best_len = i + 1
                 
         # If we found a valid op, consume those tokens
         if valid_op:
+            if reasoning:
+                print(f"<--  Operator Found: {valid_op}")
+                print(f"<--  AI Reasoning: {reasoning}")
             for _ in range(best_len):
                 self.eat(self.cur().type)
             target = self.parse_expression_or_target()
@@ -193,6 +191,32 @@ class Parser:
              print(f"  (AI Reasoning: {op_res.get('reasoning')})")
         return ast.ReduceNode(op, target)
 
+    def parse_filter(self):
+        # Syntax: FILTER op val OVER target
+        self.eat("FILTER")
+        
+        # operator: > < == etc
+        # Lexer has OPERATOR token
+        if self.cur().type == "OPERATOR":
+            op = self.eat("OPERATOR").value
+        else:
+            raise ParseError(f"Expected operator after filter, got {self.cur()}")
+            
+        # value to compare against
+        val = self.parse_expression() # allows number or variable
+        
+        # 'over', 'on', 'in'
+        c = self.cur()
+        if c.type == "OVER_ON":
+            self.eat("OVER_ON")
+        elif c.type == "IDENTIFIER" and c.value.lower() in ("over", "on", "in"):
+             self.eat("IDENTIFIER")
+        else:
+            raise ParseError(f"Expected 'over', 'on', or 'in' in filter command, got {c}")
+            
+        target = self.parse_expression_or_target()
+        return ast.FilterNode(op, val, target)
+
     def parse_expression_or_target(self):
         c = self.cur()
         if c.type == "LBRACK":
@@ -211,16 +235,16 @@ class Parser:
         self.eat("LBRACK")
         vals = []
         if self.cur().type != "RBRACK":
-            vals.append(self.parse_number_literal())
+            vals.append(self.parse_expression())
             while self.cur().type == "COMMA":
-                self.eat("COMMA"); vals.append(self.parse_number_literal())
+                self.eat("COMMA"); vals.append(self.parse_expression())
         self.eat("RBRACK")
         return ast.ListNode(vals)
 
     def parse_list_shorthand(self):
         vals = [self.parse_number_literal()]
         while self.cur().type == "COMMA":
-            self.eat("COMMA"); vals.append(self.parse_number_literal())
+            self.eat("COMMA"); vals.append(self.parse_expression())
         return ast.ListNode(vals)
 
     def parse_number_literal(self):
