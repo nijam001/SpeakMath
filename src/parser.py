@@ -5,14 +5,20 @@ from .lexer import Token, lex
 from . import ast
 from .llm_layer import resolve_phrase
 from .semantic_map import SEMANTIC_MAP
+from .parse_result import (
+    ParseResult, FailureObject,
+    create_lexical_failure, create_semantic_failure, create_syntax_failure
+)
 
 class ParseError(Exception):
+    """Legacy exception for backwards compatibility"""
     pass
 
 class Parser:
     def __init__(self, tokens: List[Token]):
         self.tokens = tokens
         self.pos = 0
+        self.input_text = ""  # Store for context in errors
 
     def cur(self):
         return self.tokens[self.pos]
@@ -29,6 +35,14 @@ class Parser:
         if i < len(self.tokens):
             return self.tokens[i]
         return Token("EOF","",len(self.tokens))
+    
+    def get_context(self, pos, window=20):
+        """Get surrounding text for error context"""
+        if not self.input_text:
+            return ""
+        start = max(0, pos - window)
+        end = min(len(self.input_text), pos + window)
+        return self.input_text[start:end]
 
     def parse(self):
         node = self.parse_command()
@@ -76,6 +90,8 @@ class Parser:
             "addition", "subtraction", "multiplication", "division"
         }
         
+        best_reasoning = None
+        
         # Look ahead up to 10 tokens to form a phrase
         for i in range(10):
             tok = self.look(i)
@@ -108,15 +124,12 @@ class Parser:
             elif isinstance(check_res, str):
                 check_op = check_res
                 
-            if check_op:
+            if check_op and check_op != "UNKNOWN":
                 valid_op = check_op
                 best_len = i + 1
-                if check_reasoning:
-                     reasoning = check_reasoning
-            elif valid_op and tok.value.lower() in SAFE_PHRASE_IDS:
-                # Heuristic: If valid verb exists, extend consumption over safe filler words
-                # even if resolution fails for the extended phrase.
-                best_len = i + 1
+                best_reasoning = reasoning
+                if reasoning:
+                     print(f"  (AI Reasoning: {reasoning})")
                 
         # If we found a valid op, consume those tokens
         if valid_op:
@@ -126,7 +139,12 @@ class Parser:
             for _ in range(best_len):
                 self.eat(self.cur().type)
             target = self.parse_expression_or_target()
-            return ast.ComputeNode(valid_op, target)
+            
+            # Create ComputeNode with LLM metadata if resolved by AI
+            is_llm = best_reasoning is not None
+            metadata = {"original_phrase": curr_phrase, "reasoning": best_reasoning} if is_llm else {}
+            
+            return ast.ComputeNode(valid_op, target, is_llm_resolved=is_llm, llm_metadata=metadata)
             
         # Fallback for single keywords if loop somehow failed to pick them up (unlikely with above logic)
         # or if they were matched but not extended. 
@@ -168,12 +186,25 @@ class Parser:
         if self.cur().type == "OVER_ON":
             self.eat("OVER_ON")
         target = self.parse_expression_or_target()
+        
         # normalize op to canonical via resolve_phrase
         op_res = resolve_phrase(op_phrase) or SEMANTIC_MAP.get(op_phrase, "OP_MAP")
-        op = op_res if isinstance(op_res, str) else op_res.get("operator") if isinstance(op_res, dict) else "OP_MAP"
-        if isinstance(op_res, dict) and op_res.get("reasoning"):
-             print(f"  (AI Reasoning: {op_res.get('reasoning')})")
-        return ast.MapNode(op, arg, target)
+        
+        is_llm = False
+        reasoning = None
+        
+        if isinstance(op_res, dict):
+            op = op_res.get("operator") or "OP_MAP"
+            reasoning = op_res.get("reasoning")
+            is_llm = reasoning is not None
+        else:
+            op = op_res if isinstance(op_res, str) else "OP_MAP"
+        
+        if reasoning:
+             print(f"  (AI Reasoning: {reasoning})")
+        
+        metadata = {"original_phrase": op_phrase, "reasoning": reasoning} if is_llm else {}
+        return ast.MapNode(op, arg, target, is_llm_resolved=is_llm, llm_metadata=metadata)
 
     def parse_reduce(self):
         self.eat("REDUCE")
@@ -185,37 +216,24 @@ class Parser:
         if self.cur().type == "OVER_ON":
             self.eat("OVER_ON")
         target = self.parse_expression_or_target()
+        
         op_res = resolve_phrase(op_phrase) or SEMANTIC_MAP.get(op_phrase, "OP_REDUCE")
-        op = op_res if isinstance(op_res, str) else op_res.get("operator") if isinstance(op_res, dict) else "OP_REDUCE"
-        if isinstance(op_res, dict) and op_res.get("reasoning"):
-             print(f"  (AI Reasoning: {op_res.get('reasoning')})")
-        return ast.ReduceNode(op, target)
-
-    def parse_filter(self):
-        # Syntax: FILTER op val OVER target
-        self.eat("FILTER")
         
-        # operator: > < == etc
-        # Lexer has OPERATOR token
-        if self.cur().type == "OPERATOR":
-            op = self.eat("OPERATOR").value
-        else:
-            raise ParseError(f"Expected operator after filter, got {self.cur()}")
-            
-        # value to compare against
-        val = self.parse_expression() # allows number or variable
+        is_llm = False
+        reasoning = None
         
-        # 'over', 'on', 'in'
-        c = self.cur()
-        if c.type == "OVER_ON":
-            self.eat("OVER_ON")
-        elif c.type == "IDENTIFIER" and c.value.lower() in ("over", "on", "in"):
-             self.eat("IDENTIFIER")
+        if isinstance(op_res, dict):
+            op = op_res.get("operator") or "OP_REDUCE"
+            reasoning = op_res.get("reasoning")
+            is_llm = reasoning is not None
         else:
-            raise ParseError(f"Expected 'over', 'on', or 'in' in filter command, got {c}")
-            
-        target = self.parse_expression_or_target()
-        return ast.FilterNode(op, val, target)
+            op = op_res if isinstance(op_res, str) else "OP_REDUCE"
+        
+        if reasoning:
+             print(f"  (AI Reasoning: {reasoning})")
+        
+        metadata = {"original_phrase": op_phrase, "reasoning": reasoning} if is_llm else {}
+        return ast.ReduceNode(op, target, is_llm_resolved=is_llm, llm_metadata=metadata)
 
     def parse_expression_or_target(self):
         c = self.cur()
