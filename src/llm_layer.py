@@ -113,7 +113,9 @@ def resolve_phrase(phrase: str) -> str:
         return None
         
     try:
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        # Use gemini-1.5-flash (free tier compatible)
+        # Alternative: 'gemini-pro' or 'gemini-1.5-pro'
+        model = genai.GenerativeModel('gemini-2.5-flash')
         
         valid_ops = list(set(list(SEMANTIC_MAP.values())))
         
