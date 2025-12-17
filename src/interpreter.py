@@ -66,13 +66,44 @@ class Interpreter:
              return self.visit_FilterNode(node)
         if isinstance(node, ast.SequenceNode):
             first_out = self.eval(node.first)
-            # when second expects input, if it is a ComputeNode with target variable, pass list
-            # we'll support composition where second uses result of first as its implicit input
-            # For simplicity: if second is ComputeNode and its target is VariableNode named "_" then replace it
+            
+            # Enhanced composition support:
+            # 1. If second is ComputeNode with "_" variable, replace with first result
             if isinstance(node.second, ast.ComputeNode) and isinstance(node.second.target, ast.VariableNode) and node.second.target.name == "_":
-                node.second.target = ast.ListNode([ast.NumberNode(x) for x in first_out])
+                # Convert first output to appropriate AST node
+                if isinstance(first_out, list):
+                    node.second.target = ast.ListNode([ast.NumberNode(x) if isinstance(x, (int, float)) else ast.NumberNode(0) for x in first_out])
+                else:
+                    node.second.target = ast.NumberNode(first_out) if isinstance(first_out, (int, float)) else ast.NumberNode(0)
                 return self.eval(node.second)
-            # otherwise just evaluate second normally, allowing side-effects
+            
+            # 2. If second is MapNode/ReduceNode with "_" target, replace with first result
+            if isinstance(node.second, (ast.MapNode, ast.ReduceNode)) and isinstance(node.second.target, ast.VariableNode) and node.second.target.name == "_":
+                if isinstance(first_out, list):
+                    node.second.target = ast.ListNode([ast.NumberNode(x) if isinstance(x, (int, float)) else ast.NumberNode(0) for x in first_out])
+                else:
+                    # If first output is scalar, wrap in list for map/reduce
+                    if isinstance(first_out, (int, float)):
+                        node.second.target = ast.ListNode([ast.NumberNode(first_out)])
+                    else:
+                        node.second.target = ast.ListNode([])
+                return self.eval(node.second)
+            
+            # 3. If first output is a list and second is a functional operation, try to use it
+            if isinstance(first_out, list) and isinstance(node.second, (ast.ComputeNode, ast.MapNode, ast.ReduceNode)):
+                # Create a temporary variable to hold first result
+                temp_var = "_temp_composition"
+                self.vars[temp_var] = first_out
+                # Replace target if it's a variable reference to "_"
+                if isinstance(node.second.target, ast.VariableNode) and node.second.target.name == "_":
+                    node.second.target = ast.VariableNode(temp_var)
+                result = self.eval(node.second)
+                # Clean up temp variable
+                if temp_var in self.vars:
+                    del self.vars[temp_var]
+                return result
+            
+            # 4. Otherwise, evaluate second normally (allows side-effects like assignments)
             return self.eval(node.second)
         raise SemanticError("Unhandled AST node: "+str(node))
 
@@ -85,10 +116,10 @@ class Interpreter:
         if comp == "<=": return l <= r
         raise SemanticError("Unknown comparator: "+str(comp))
 
-    def ensure_numeric_list(self, lst):
+    def ensure_numeric_list(self, lst, allow_empty=False):
         if not isinstance(lst, list):
             raise SemanticError("Expected list for operation")
-        if len(lst) == 0:
+        if len(lst) == 0 and not allow_empty:
             raise SemanticError("List must be non-empty")
         for x in lst:
             if not isinstance(x, (int, float)):
@@ -124,46 +155,89 @@ class Interpreter:
 
     def execute_map(self, node: ast.MapNode):
         tval = self.eval(node.target)
-        self.ensure_numeric_list(tval)
+        # Allow empty lists for map (returns empty list)
+        if not isinstance(tval, list):
+            raise SemanticError("Map target must be a list")
+        if len(tval) == 0:
+            return []
+        
+        self.ensure_numeric_list(tval, allow_empty=True)
         op = node.op
         arg = node.arg if node.arg is not None else None
         out = []
-        if op == "OP_MAP" or op == "map" or op == "OP_MAP_ADD" or op == "OP_SUM":
-            # default map must have arg for arithmetic add/mul; we'll support basic ops through op string
+        
+        # Normalize operation name
+        op_lower = op.lower() if isinstance(op, str) else str(op).lower()
+        
+        # Addition operations
+        if op_lower in ("op_map", "map", "op_map_add", "op_sum", "add", "sum"):
+            if arg is None:
+                raise SemanticError("Map add requires numeric argument")
             for x in tval:
-                if arg is None: raise SemanticError("Map requires numeric argument for arithmetic")
                 out.append(x + arg)
             return out
-        # if op maps to OP_MAP with inner meaning like OP_MAP_MULTIPLY
-        if op in ("multiply","product","op_product","OP_PRODUCT"):
-            if arg is None: raise SemanticError("Map multiply requires argument")
-            for x in tval: out.append(x * arg)
+        
+        # Multiplication operations
+        if op_lower in ("multiply", "product", "op_product", "op_map_multiply"):
+            if arg is None:
+                raise SemanticError("Map multiply requires numeric argument")
+            for x in tval:
+                out.append(x * arg)
             return out
-        # support simple verbs "add" and "multiply"
-        if op == "add":
-            if arg is None: raise SemanticError("Map add requires argument")
-            for x in tval: out.append(x + arg)
+        
+        # Subtraction (if needed)
+        if op_lower in ("subtract", "minus", "op_subtract"):
+            if arg is None:
+                raise SemanticError("Map subtract requires numeric argument")
+            for x in tval:
+                out.append(x - arg)
             return out
-        if op == "multiply":
-            if arg is None: raise SemanticError("Map multiply requires argument")
-            for x in tval: out.append(x * arg)
+        
+        # Division (if needed)
+        if op_lower in ("divide", "op_divide"):
+            if arg is None:
+                raise SemanticError("Map divide requires numeric argument")
+            if arg == 0:
+                raise SemanticError("Division by zero")
+            for x in tval:
+                out.append(x / arg)
             return out
-        raise SemanticError("Unknown map op: "+str(op))
+        
+        raise SemanticError(f"Unknown map operation: {op}")
 
     def execute_reduce(self, node: ast.ReduceNode):
         tval = self.eval(node.target)
+        if not isinstance(tval, list):
+            raise SemanticError("Reduce target must be a list")
+        if len(tval) == 0:
+            raise SemanticError("Cannot reduce empty list")
+        
         self.ensure_numeric_list(tval)
         op = node.op
-        if op in ("OP_REDUCE","reduce","op_reduce"):
-            # default: sum
+        
+        # Normalize operation name
+        op_lower = op.lower() if isinstance(op, str) else str(op).lower()
+        
+        # Sum operations
+        if op_lower in ("op_reduce", "reduce", "op_reduce", "add", "sum", "op_sum"):
             return sum(tval)
-        if op in ("add","sum","OP_SUM"):
-            return sum(tval)
-        if op in ("multiply","product","OP_PRODUCT"):
-            prod=1
-            for x in tval: prod*=x
+        
+        # Product operations
+        if op_lower in ("multiply", "product", "op_product"):
+            prod = 1
+            for x in tval:
+                prod *= x
             return prod
-        raise SemanticError("Unknown reduce op: "+str(op))
+        
+        # Max operation
+        if op_lower in ("max", "op_max", "maximum"):
+            return max(tval)
+        
+        # Min operation
+        if op_lower in ("min", "op_min", "minimum"):
+            return min(tval)
+        
+        raise SemanticError(f"Unknown reduce operation: {op}")
 
     def visit_FilterNode(self, node):
         target_val = self.eval(node.target)
