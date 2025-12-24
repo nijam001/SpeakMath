@@ -1,8 +1,5 @@
-
 # lexer.py
 import re
-from typing import List
-from .semantic_map import SEMANTIC_MAP
 
 TOKEN_SPEC = [
     ("NUMBER",       r"\d+(\.\d+)?"),

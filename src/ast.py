@@ -1,7 +1,9 @@
 
 # ast.py
 class ASTNode:
-    pass
+    def __init__(self):
+        self.debug_info = {} # Stores visualizer/debugger metadata like source text
+
 
 class CommandNode(ASTNode):
     def __init__(self, cmd):
@@ -18,20 +20,6 @@ class ComputeNode(ASTNode):
     def __repr__(self):
         llm_flag = " [LLM]" if self.is_llm_resolved else ""
         return f"ComputeNode({self.op}, {self.target}){llm_flag}"
-
-class LLMResolvedNode(ASTNode):
-    """
-    Represents an operation that was resolved via LLM fallback.
-    Maintains metadata about AI resolution for debugging/logging.
-    """
-    def __init__(self, resolved_op, target, original_phrase, reasoning):
-        self.resolved_op = resolved_op      # Canonical op (e.g., OP_SUM)
-        self.target = target                # Target expression
-        self.original_phrase = original_phrase  # User's original phrase
-        self.reasoning = reasoning          # LLM's reasoning
-        self.is_llm_resolved = True
-    def __repr__(self):
-        return f"LLMResolvedNode({self.resolved_op}, '{self.original_phrase}', {self.target})"
 
 class AssignNode(ASTNode):
     def __init__(self, varname, expr):
@@ -74,12 +62,14 @@ class VariableNode(ASTNode):
         return f"VariableNode({self.name})"
 
 class BinaryOpNode(ASTNode):
-    def __init__(self,left,op,right):
-        self.left=left; self.op=op; self.right=right
+    def __init__(self, left, op, right):
+        self.left = left
+        self.op = op
+        self.right = right
     def __repr__(self):
         return f"BinaryOpNode({self.left} {self.op} {self.right})"
 
-class FilterNode:
+class FilterNode(ASTNode):
     def __init__(self, op, value, target):
         self.op = op
         self.value = value

@@ -1,4 +1,4 @@
-# SpeakMath User Guide
+# 📘 SpeakMath User Guide
 
 SpeakMath is a mini-programming language that bridges the gap between natural language and mathematical computations. It uses a formal grammar for structure but leverages an LLM (Google Gemini) to understand flexible "verbs" and operators.
 
@@ -20,21 +20,45 @@ Create a `.env` file in the project root and add your API Key:
 GEMINI_API_KEY=your_actual_api_key_here
 ```
 
-## 🎮 How to Run
+---
+
+## 💻 Web Interface (New!)
+
+SpeakMath now comes with a beautiful **Streamlit Chatbot** interface.
+
+### Running the App
+```bash
+streamlit run streamlit_app.py
+```
+
+### Key Features
+1.  **Chatbot Experience**: Interact naturally with a message history.
+2.  **Pipeline Visualization**: See exactly how your code is processed:
+    *   **1️⃣ Lexer**: View color-coded token badges.
+    *   **2️⃣ Parser**: Explore the Abstract Syntax Tree (AST) visualization.
+    *   **3️⃣ Interpreter**: See logs and results interactively.
+3.  **Variable Inspector**: A sidebar panel that tracks all your active variables (`nums`, `x`, etc.).
+4.  **Sticky Input Bar**: A modern, glass-styled input bar stays at the bottom so you can type comfortably.
+
+---
+
+## 🎮 CLI Modes
 
 ### Interactive Mode (REPL)
-Run the interpreter interactively:
+Run the classic terminal interpreter:
 ```bash
 python -m src
 ```
-**New!** Type `help` to see a list of commands.
-Type `exit` or `quit` to leave.
+*   Type `help` to see a list of commands.
+*   Type `exit` or `quit` to leave.
 
 ### Demo Mode
 Run the built-in demo script:
 ```bash
 python -m src --demo
 ```
+
+---
 
 ## 🗣️ Language Syntax
 
@@ -44,36 +68,50 @@ python -m src --demo
 | `set` | `set x to 5` | Assign a value to a variable. |
 | `print` | `print x` | Display a value or variable. |
 | `[]` | `[1, 2, 3]` | Create a list of numbers. |
-| `help` | `help` | **(New)** Show available commands in REPL. |
+| `help` | `help` | Show available commands (CLI only). |
 
 ### Math Operations
 Standard operators are supported directly:
 ```text
-sum 1, 2, 3
+sum [1, 2, 3]
 mean [10, 20, 30]
-product 2, 4
-max 5, 1, 9
+product [2, 4]
+max [5, 1, 9]
 ```
 
-### Functional Operations
-SpeakMath supports `map` and `reduce`:
+### Functional Operations (Map & Reduce)
+SpeakMath supports powerful functional programming concepts:
+
+#### **Map** (Apply to all)
+You can use variables in your map operations!
 ```text
-map add 2 over [1, 2, 3]       => [3, 4, 5]
+set x to 2
+set nums to [1, 2, 3]
+
+map add 5 over nums         => [6, 7, 8]
+map multiply x over nums    => [2, 4, 6]  <-- Uses variable 'x'
+```
+
+#### **Reduce** (Combine to one)
+```text
 reduce multiply over [2, 3, 4] => 24
+reduce max over [10, 5, 8]     => 10
 ```
 
 ### 🧠 LLM-Powered Natural Language
-Thanks to the AI integration, you can use natural phrases for operators. The system will figure out what you mean and even **explain its reasoning**!
+Thanks to AI integration, you can use flexible english phrases. The system understands context!
 
-**Examples of what you can say:**
-- "tally up these numbers [1, 2, 3]" → `sum`
-  - *System Output: (AI Reasoning: Tally up implies addition)*
-- "find the average of 10, 20" → `mean`
-- "arrange from smallest to biggest [3, 1, 2]" → `sort ascending`
+**Examples:**
+- **"Tally up these numbers [1, 2, 3]"** → Maps to `SUM`
+- **"Find the total of nums"** → Correctly identifies `nums` as the target variable.
+- **"Arrange from smallest to biggest"** → Maps to `SORT ASCENDING`
 
-**Smart Error Handling:**
-If you ask something non-mathematical like "where is UM?", the system will now politely tell you it doesn't understand and suggest rephrasing, rather than crashing.
+### 🛡️ Smart Error Handling
+- The system explains *why* it chose a certain operation (e.g., "Reasoning: 'Tally up' implies addition").
+- If it encounters a complex phrase like `find the total of nums`, the smart parser separates the **command** ("find the total of") from the **variable** ("nums") to execute correctly.
+
+---
 
 ## 🔧 Troubleshooting
 - **"Warning: GEMINI_API_KEY not set"**: The LLM features won't work. Check your `.env` file.
-- **"Unknown command"**: The LLM couldn't map your phrase. Try rephrasing or use the `help` command.
+- **Visualizations missing?**: Ensure `graphviz` is installed on your system for the AST chart to render fully.
