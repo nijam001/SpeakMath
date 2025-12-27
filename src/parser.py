@@ -122,13 +122,17 @@ class Parser:
             return self.parse_reduce()
         if c.type == "FILTER":
             return self.parse_filter()
+        if c.type == "SORT":
+            return self.parse_sort()
         
         # 1. Local Resolution Loop (Cheap)
         # Try to find the longest phrase that resolves LOCALLY (semantic map, synonyms, etc.)
         curr_phrase = ""
+        curr_phrase_for_resolution = ""  # Phrase without target variables
         valid_op = None
         best_len = 0
         best_reasoning = None # Local has no reasoning
+        unsafe_positions = []  # Track positions of unsafe identifiers (to skip when consuming)
         
         for i in range(10):
             tok = self.look(i)
@@ -136,16 +140,42 @@ class Parser:
             if tok.type in ("NUMBER", "LBRACK", "LPAREN", "EOF", "SET", "IF"):
                 break
             
-            # SOFT STOP: If we have a valid op, and hit an unsafe identifier, stop.
-            if valid_op and tok.type == "IDENTIFIER" and tok.value.lower() not in SAFE_PHRASE_IDS:
-                break
+            # Check if this looks like a target variable (unsafe identifier)
+            is_unsafe = tok.type == "IDENTIFIER" and tok.value.lower() not in SAFE_PHRASE_IDS
+            
+            if is_unsafe:
+                # If we already have unsafe identifiers and a valid op, stop
+                if valid_op and unsafe_positions:
+                    break
+                    
+                # Peek ahead to see if there are more safe tokens after this
+                has_more_safe = False
+                for j in range(i + 1, min(i + 5, 10)):
+                    next_tok = self.look(j)
+                    if next_tok.type in ("NUMBER", "LBRACK", "LPAREN", "EOF", "SET", "IF"):
+                        break
+                    if next_tok.type == "IDENTIFIER" and next_tok.value.lower() in SAFE_PHRASE_IDS:
+                        has_more_safe = True
+                        break
+                
+                if not has_more_safe:
+                    # No more safe modifiers ahead, stop here
+                    break
+                    
+                # Mark this position to skip when consuming tokens
+                unsafe_positions.append(i)
+                part = tok.value
+                curr_phrase += " " + part if curr_phrase else part
+                # Don't add to curr_phrase_for_resolution
+                continue
             
             part = tok.value
             curr_phrase += " " + part if curr_phrase else part
+            curr_phrase_for_resolution += " " + part if curr_phrase_for_resolution else part
             
             # Use LOCAL resolver only
             from .llm_layer import resolve_phrase_local
-            local_op = resolve_phrase_local(curr_phrase)
+            local_op = resolve_phrase_local(curr_phrase_for_resolution)
             
             if local_op:
                 valid_op = local_op
@@ -181,18 +211,23 @@ class Parser:
                     best_reasoning = llm_res.get("reasoning")
                     best_len = llm_len
 
-        # If we found a valid op, consume those tokens
+        # If we found a valid op, consume those tokens (but skip unsafe positions)
         if valid_op:
-            # Removed redundant printing here. Defer to Interpreter.
-            for _ in range(best_len):
-                self.eat(self.cur().type)
-                
+            # Consume tokens up to best_len, skipping positions marked as unsafe (target variables)
+            for relative_pos in range(best_len):
+                if relative_pos in unsafe_positions:
+                    # Skip this token by moving our position forward manually
+                    self.pos += 1
+                else:
+                    # Eat the current token (which advances pos automatically)
+                    self.eat(self.cur().type)
+            
             # Consume remaining "safe" noise tokens
             while True:
                 c = self.cur()
                 if c.type in ("NUMBER", "LBRACK", "LPAREN", "EOF"):
                     break
-                if c.value.lower() in SAFE_PHRASE_IDS:
+                if c.type == "IDENTIFIER" and c.value.lower() in SAFE_PHRASE_IDS:
                     self.eat(c.type)
                 else:
                     break
@@ -202,13 +237,10 @@ class Parser:
             # Create ComputeNode with metadata for BOTH Local and AI
             source = "AI" if best_reasoning else "Local"
             metadata = {
-                "original_phrase": curr_phrase if valid_op != "OP_MEAN" else "mean/average", # simplify?
+                "original_phrase": curr_phrase,
                 "reasoning": best_reasoning,
                 "source": source
             }
-            # Start: If it was local, curr_phrase might be short. 
-            # Actually curr_phrase is whatever matched loop.
-            metadata["original_phrase"] = curr_phrase 
             
             return ast.ComputeNode(valid_op, target, is_llm_resolved=(source=="AI"), llm_metadata=metadata)
             
@@ -333,6 +365,37 @@ class Parser:
                  
         target = self.parse_expression_or_target()
         return ast.FilterNode(op, comp_val, target)
+    
+    def parse_sort(self):
+        """
+        Parse sort command with optional direction modifier.
+        Syntax: sort <target> [ascending|descending]
+        Example: sort nums descending
+        """
+        self.eat("SORT")
+        
+        # Parse the target first
+        target = self.parse_expression_or_target()
+        
+        # Check for optional ascending/descending modifier
+        direction = "ascending"  # default
+        c = self.cur()
+        if c.type == "IDENTIFIER":
+            if c.value.lower() == "ascending":
+                direction = "ascending"
+                self.eat("IDENTIFIER")
+            elif c.value.lower() == "descending":
+                direction = "descending"
+                self.eat("IDENTIFIER")
+        
+        # Create compute node with appropriate operator
+        op = "OP_SORT_DESC" if direction == "descending" else "OP_SORT_ASC"
+        metadata = {
+            "original_phrase": f"sort {direction}",
+            "reasoning": None,
+            "source": "Local"
+        }
+        return ast.ComputeNode(op, target, is_llm_resolved=False, llm_metadata=metadata)
 
     def parse_expression_or_target(self):
         start = self.cur().pos
