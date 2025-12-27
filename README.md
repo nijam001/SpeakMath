@@ -4,6 +4,23 @@
 ![Course](https://img.shields.io/badge/Course-WIF3010-blue)
 ![Paradigm](https://img.shields.io/badge/Paradigm-Functional%20Programming-green)
 
+## Running the Web Interface (Chatbot)
+
+This project includes an educational chatbot interface that visualizes the compilation pipeline (Lexer, Parser, Interpreter).
+
+1. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Run the Streamlit app:
+   ```bash
+   python -m streamlit run streamlit_app.py
+   ```
+
+3. Open the link displayed in the terminal (usually `http://localhost:8501`).
+
+## Running the CLI Demo
 **SpeakMath** is a math-focused natural language mini-programming language that interprets expressions like _"find the mean of these values"_ into verified computations. The LLM suggests operator meanings, while our grammar verifies expressions before evaluation.
 
 **University of Malaya** | Faculty of Computer Science & Information Technology  

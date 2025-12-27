@@ -25,7 +25,36 @@ def demo():
         "reduce multiply over nums",
         "if 5 > 3 then print 99",
     ]
-    print('--- Demo run ---')
+    _run_examples(examples, interp, '--- Standard Command Demo ---')
+            
+    llm_examples = [
+        "calculate the total of [100, 200, 300]",
+        "find the biggest number in [5, 12, 1, 99]",
+        "give me the average of [10, 20, 30]",
+        "multiply all these numbers [2, 3, 4]",
+        "sort this list from high to low [3, 1, 2, 5]",
+        # "filter" via LLM is not yet supported for complex queries like "numbers less than 5"
+        # but we can try a simple query if we added it to semantic map, or just omit it for now.
+        "find the smallest number in [8, 2, 9]"
+    ]
+    
+    # Standard syntax for filter, now that we implemented parse_filter
+    print('> filter < 5 in [1, 6, 2, 8, 3]')
+    try:
+        val, _ = run_command("filter < 5 in [1, 6, 2, 8, 3]", interp)
+        print('=>', val)
+    except Exception as e:
+        print('ERROR:', e)
+    
+    _run_examples(llm_examples, interp, '\n--- Natural Language (LLM) Demo ---', 
+                 note="(These phrases are NOT in the semantic map, so they force an LLM call)")
+
+    print('--- End demo ---')
+
+def _run_examples(examples, interp, header, note=None):
+    print(header)
+    if note:
+        print(note)
     for ex in examples:
         print('> ', ex)
         try:
@@ -34,7 +63,6 @@ def demo():
                 print('=>', out)
         except Exception as e:
             print('ERROR:', e)
-    print('--- End demo ---')
 
 def repl():
     print("SpeakMath Interactive REPL")

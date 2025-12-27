@@ -1,8 +1,5 @@
-
 # lexer.py
 import re
-from typing import List
-from .semantic_map import SEMANTIC_MAP
 
 TOKEN_SPEC = [
     ("NUMBER",       r"\d+(\.\d+)?"),
@@ -26,8 +23,7 @@ TOKEN_SPEC = [
     ("PRODUCT",      r"\b(product|multiply)\b"),
     ("MAX",          r"\bmax\b"),
     ("MIN",          r"\bmin\b"),
-    ("SORT_ASC",     r"\bsort\s+ascending\b"),
-    ("SORT_DESC",    r"\bsort\s+descending\b"),
+    ("SORT",         r"\bsort\b"),
     ("PRINT",        r"\bprint\b"),
     ("OVER_ON",      r"\b(over|on)\b"),
     ("IDENTIFIER",   r"[A-Za-z_][A-Za-z0-9_]*"),
