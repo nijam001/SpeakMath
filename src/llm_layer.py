@@ -88,37 +88,23 @@ def validate_operator(operator: str, valid_operators: list) -> bool:
     """
     return operator in valid_operators or operator == "UNKNOWN"
 
-def resolve_phrase(phrase: str) -> str:
-    """
-    Resolve a verb phrase to a canonical operator token.
-    First check direct mapping, then synonym map; otherwise use Gemini API.
-    """
+def resolve_phrase_local(phrase: str) -> Optional[str]:
+    """Resolve phrase using only local maps (fast)."""
     key = phrase.lower().strip()
-    
-    # 1. Direct Lookup
-    if key in SEMANTIC_MAP:
-        return SEMANTIC_MAP[key]
-    
-    # 2. Synonym Lookup
-    if key in SYNONYM_MAP:
-        return SYNONYM_MAP[key]
-    
-    # 3. Heuristic / Pattern Matching (Legacy)
-    if "mean" in key or "average" in key:
-        return "OP_MEAN"
-    
-    # 4. LLM Fallback
+    if key in SEMANTIC_MAP: return SEMANTIC_MAP[key]
+    if key in SYNONYM_MAP: return SYNONYM_MAP[key]
+    if "mean" in key or "average" in key: return "OP_MEAN"
+    return None
+
+def resolve_phrase_llm(phrase: str) -> Optional[Dict[str, str]]:
+    """Resolve phrase using LLM (slow)."""
     if not api_key:
         print("Warning: GEMINI_API_KEY not set. Cannot resolve unknown phrase via LLM.")
         return None
         
     try:
-        # Use gemini-1.5-flash (free tier compatible)
-        # Alternative: 'gemini-pro' or 'gemini-1.5-pro'
         model = genai.GenerativeModel('gemini-2.5-flash')
-        
         valid_ops = list(set(list(SEMANTIC_MAP.values())))
-        
         prompt = f"""
         You are a semantic mapper for the "SpeakMath" language.
         Map the user's natural language phrase to one of the following valid operators:
@@ -128,40 +114,20 @@ def resolve_phrase(phrase: str) -> str:
         - "operator": The valid operator name (e.g., "OP_SUM"), or "UNKNOWN" if no match.
         - "reasoning": A brief explanation of why you chose this operator.
         
-        Examples:
-        Phrase: "tally up the numbers" -> {{"operator": "OP_SUM", "reasoning": "Tally up implies addition."}}
-        Phrase: "where is UM?" -> {{"operator": "UNKNOWN", "reasoning": "This is a question about location, not a math operation."}}
-        
         Phrase: "{phrase}"
         """
         
         def call_gemini():
              return model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
 
-        try:
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(call_gemini)
-                response = future.result(timeout=5)
-        except concurrent.futures.TimeoutError:
-            print("\n(LLM is not available: Request timed out > 5s)")
-            return None
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(call_gemini)
+            response = future.result(timeout=5)
             
-        # Use helper function for JSON parsing
-        parsed = parse_llm_json_response(response.text)
-        if parsed:
-            op = parsed.get("operator")
-            if op and validate_operator(op, valid_ops) and op != "UNKNOWN":
-                return parsed
-            # Return with None operator if UNKNOWN or invalid
-            return {"operator": None, "reasoning": parsed.get("reasoning", "No match found")}
-        
-        return None
-        
     except concurrent.futures.TimeoutError:
         print("\n(LLM is not available: Request timed out > 5s)")
         return None
     except Exception as e:
-        # Catch network errors, auth errors, API errors, etc.
         error_msg = str(e)
         if "API key" in error_msg.lower() or "authentication" in error_msg.lower():
             print(f"\n(LLM authentication error: Please check your GEMINI_API_KEY)")
@@ -172,3 +138,17 @@ def resolve_phrase(phrase: str) -> str:
         else:
             print(f"\n(LLM is not available: {error_msg})")
         return None
+
+    parsed = parse_llm_json_response(response.text)
+    if parsed:
+        op = parsed.get("operator")
+        if op and validate_operator(op, valid_ops) and op != "UNKNOWN":
+            return parsed
+        return {"operator": None, "reasoning": parsed.get("reasoning", "No match found")}
+    return None
+
+def resolve_phrase(phrase: str) -> Union[str, Dict[str, str], None]:
+    """Legacy wrapper for backward compatibility"""
+    local = resolve_phrase_local(phrase)
+    if local: return local
+    return resolve_phrase_llm(phrase)
