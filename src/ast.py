@@ -1,7 +1,9 @@
 
 # ast.py
 class ASTNode:
-    pass
+    def __init__(self):
+        self.debug_info = {} # Stores visualizer/debugger metadata like source text
+
 
 class CommandNode(ASTNode):
     def __init__(self, cmd):
@@ -10,11 +12,14 @@ class CommandNode(ASTNode):
         return f"CommandNode({self.cmd})"
 
 class ComputeNode(ASTNode):
-    def __init__(self, op, target):
+    def __init__(self, op, target, is_llm_resolved=False, llm_metadata=None):
         self.op = op  # canonical op, e.g., OP_SUM
         self.target = target
+        self.is_llm_resolved = is_llm_resolved
+        self.llm_metadata = llm_metadata or {}
     def __repr__(self):
-        return f"ComputeNode({self.op}, {self.target})"
+        llm_flag = " [LLM]" if self.is_llm_resolved else ""
+        return f"ComputeNode({self.op}, {self.target}){llm_flag}"
 
 class AssignNode(ASTNode):
     def __init__(self, varname, expr):
@@ -57,12 +62,14 @@ class VariableNode(ASTNode):
         return f"VariableNode({self.name})"
 
 class BinaryOpNode(ASTNode):
-    def __init__(self,left,op,right):
-        self.left=left; self.op=op; self.right=right
+    def __init__(self, left, op, right):
+        self.left = left
+        self.op = op
+        self.right = right
     def __repr__(self):
         return f"BinaryOpNode({self.left} {self.op} {self.right})"
 
-class FilterNode:
+class FilterNode(ASTNode):
     def __init__(self, op, value, target):
         self.op = op
         self.value = value
@@ -71,19 +78,25 @@ class FilterNode:
         return f"FilterNode({self.op}, {self.value}, {self.target})"
 
 class MapNode(ASTNode):
-    def __init__(self, op, arg, target):
+    def __init__(self, op, arg, target, is_llm_resolved=False, llm_metadata=None):
         self.op = op  # canonical or operation name
         self.arg = arg
         self.target = target
+        self.is_llm_resolved = is_llm_resolved
+        self.llm_metadata = llm_metadata or {}
     def __repr__(self):
-        return f"MapNode({self.op}, {self.arg}, {self.target})"
+        llm_flag = " [LLM]" if self.is_llm_resolved else ""
+        return f"MapNode({self.op}, {self.arg}, {self.target}){llm_flag}"
 
 class ReduceNode(ASTNode):
-    def __init__(self, op, target):
+    def __init__(self, op, target, is_llm_resolved=False, llm_metadata=None):
         self.op = op
         self.target = target
+        self.is_llm_resolved = is_llm_resolved
+        self.llm_metadata = llm_metadata or {}
     def __repr__(self):
-        return f"ReduceNode({self.op}, {self.target})"
+        llm_flag = " [LLM]" if self.is_llm_resolved else ""
+        return f"ReduceNode({self.op}, {self.target}){llm_flag}"
 
 class SequenceNode(ASTNode):
     def __init__(self, first, second):
