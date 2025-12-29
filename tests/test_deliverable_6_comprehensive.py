@@ -909,8 +909,8 @@ class TestIntegration:
         self.execute("set doubled to map multiply 2 over filtered")
         self.execute("set total to reduce sum over doubled")
         
-        # filtered = [5, 8, 9] -> doubled = [10, 16, 18] -> total = 44
-        assert self.interp.vars['total'] == 44
+        # filtered = [5, 8, 9, 4] -> doubled = [10, 16, 18, 8] -> total = 52
+        assert self.interp.vars['total'] == 52
     
     def test_conditional_with_computation(self):
         """

@@ -20,6 +20,11 @@ SEMANTIC_MAP = {
     "print": "OP_PRINT",
     "set": "OP_ASSIGN",
     "if": "OP_IF",
+    # Map operations - these are used when parsing "map <op> <arg> over <list>"
+    "subtract": "subtract",
+    "minus": "subtract",
+    "divide": "divide",
+    "division": "divide",
 }
 
 # synonyms / phrases that may need LLM or rule-based normalization
