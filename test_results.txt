@@ -1,0 +1,159 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.3, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\eisra\SPEAKMATH\SpeakMath\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\eisra\SPEAKMATH\SpeakMath
+collecting ... collected 82 items
+
+tests/test_deliverable_6_comprehensive.py::TestBasicArithmetic::test_addition PASSED [  1%]
+tests/test_deliverable_6_comprehensive.py::TestBasicArithmetic::test_subtraction PASSED [  2%]
+tests/test_deliverable_6_comprehensive.py::TestBasicArithmetic::test_multiplication PASSED [  3%]
+tests/test_deliverable_6_comprehensive.py::TestBasicArithmetic::test_division PASSED [  4%]
+tests/test_deliverable_6_comprehensive.py::TestBasicArithmetic::test_complex_expression PASSED [  6%]
+tests/test_deliverable_6_comprehensive.py::TestAggregateOperations::test_sum PASSED [  7%]
+tests/test_deliverable_6_comprehensive.py::TestAggregateOperations::test_mean PASSED [  8%]
+tests/test_deliverable_6_comprehensive.py::TestAggregateOperations::test_product PASSED [  9%]
+tests/test_deliverable_6_comprehensive.py::TestAggregateOperations::test_max PASSED [ 10%]
+tests/test_deliverable_6_comprehensive.py::TestAggregateOperations::test_min PASSED [ 12%]
+tests/test_deliverable_6_comprehensive.py::TestSortingOperations::test_sort_ascending FAILED [ 13%]
+tests/test_deliverable_6_comprehensive.py::TestSortingOperations::test_sort_descending FAILED [ 14%]
+tests/test_deliverable_6_comprehensive.py::TestSortingOperations::test_default_sort PASSED [ 15%]
+tests/test_deliverable_6_comprehensive.py::TestVariableOperations::test_assign_number PASSED [ 17%]
+tests/test_deliverable_6_comprehensive.py::TestVariableOperations::test_assign_expression PASSED [ 18%]
+tests/test_deliverable_6_comprehensive.py::TestVariableOperations::test_assign_list PASSED [ 19%]
+tests/test_deliverable_6_comprehensive.py::TestVariableOperations::test_use_variable PASSED [ 20%]
+tests/test_deliverable_6_comprehensive.py::TestVariableOperations::test_undefined_variable_error PASSED [ 21%]
+tests/test_deliverable_6_comprehensive.py::TestConditionalOperations::test_if_true_greater_than PASSED [ 23%]
+tests/test_deliverable_6_comprehensive.py::TestConditionalOperations::test_if_false_less_than PASSED [ 24%]
+tests/test_deliverable_6_comprehensive.py::TestConditionalOperations::test_if_equals PASSED [ 25%]
+tests/test_deliverable_6_comprehensive.py::TestConditionalOperations::test_if_not_equals PASSED [ 26%]
+tests/test_deliverable_6_comprehensive.py::TestConditionalOperations::test_if_greater_equal PASSED [ 28%]
+tests/test_deliverable_6_comprehensive.py::TestConditionalOperations::test_if_less_equal PASSED [ 29%]
+tests/test_deliverable_6_comprehensive.py::TestMapOperations::test_map_add PASSED [ 30%]
+tests/test_deliverable_6_comprehensive.py::TestMapOperations::test_map_multiply PASSED [ 31%]
+tests/test_deliverable_6_comprehensive.py::TestMapOperations::test_map_subtract FAILED [ 32%]
+tests/test_deliverable_6_comprehensive.py::TestMapOperations::test_map_divide FAILED [ 34%]
+tests/test_deliverable_6_comprehensive.py::TestMapOperations::test_map_with_variable PASSED [ 35%]
+tests/test_deliverable_6_comprehensive.py::TestMapOperations::test_map_empty_list PASSED [ 36%]
+tests/test_deliverable_6_comprehensive.py::TestReduceOperations::test_reduce_sum PASSED [ 37%]
+tests/test_deliverable_6_comprehensive.py::TestReduceOperations::test_reduce_product PASSED [ 39%]
+tests/test_deliverable_6_comprehensive.py::TestReduceOperations::test_reduce_max FAILED [ 40%]
+tests/test_deliverable_6_comprehensive.py::TestReduceOperations::test_reduce_min FAILED [ 41%]
+tests/test_deliverable_6_comprehensive.py::TestReduceOperations::test_reduce_with_variable PASSED [ 42%]
+tests/test_deliverable_6_comprehensive.py::TestFilterOperations::test_filter_greater_than FAILED [ 43%]
+tests/test_deliverable_6_comprehensive.py::TestFilterOperations::test_filter_less_than FAILED [ 45%]
+tests/test_deliverable_6_comprehensive.py::TestFilterOperations::test_filter_equals FAILED [ 46%]
+tests/test_deliverable_6_comprehensive.py::TestFilterOperations::test_filter_no_matches FAILED [ 47%]
+tests/test_deliverable_6_comprehensive.py::TestCompositionOperations::test_map_then_reduce FAILED [ 48%]
+tests/test_deliverable_6_comprehensive.py::TestCompositionOperations::test_sort_then_compute FAILED [ 50%]
+tests/test_deliverable_6_comprehensive.py::TestCompositionOperations::test_filter_then_map FAILED [ 51%]
+tests/test_deliverable_6_comprehensive.py::TestPrintOperation::test_print_number PASSED [ 52%]
+tests/test_deliverable_6_comprehensive.py::TestPrintOperation::test_print_list PASSED [ 53%]
+tests/test_deliverable_6_comprehensive.py::TestPrintOperation::test_print_variable PASSED [ 54%]
+tests/test_deliverable_6_comprehensive.py::TestDenotationalSemantics::test_axiom_1_number_literal PASSED [ 56%]
+tests/test_deliverable_6_comprehensive.py::TestDenotationalSemantics::test_axiom_2_variable_lookup PASSED [ 57%]
+tests/test_deliverable_6_comprehensive.py::TestDenotationalSemantics::test_axiom_3_addition PASSED [ 58%]
+tests/test_deliverable_6_comprehensive.py::TestDenotationalSemantics::test_axiom_4_subtraction PASSED [ 59%]
+tests/test_deliverable_6_comprehensive.py::TestDenotationalSemantics::test_axiom_5_multiplication PASSED [ 60%]
+tests/test_deliverable_6_comprehensive.py::TestDenotationalSemantics::test_axiom_6_division PASSED [ 62%]
+tests/test_deliverable_6_comprehensive.py::TestDenotationalSemantics::test_compositional_correctness_nested PASSED [ 63%]
+tests/test_deliverable_6_comprehensive.py::TestDenotationalSemantics::test_compositional_correctness_complex PASSED [ 64%]
+tests/test_deliverable_6_comprehensive.py::TestDenotationalSemantics::test_referential_transparency PASSED [ 65%]
+tests/test_deliverable_6_comprehensive.py::TestDenotationalSemantics::test_associativity_addition PASSED [ 67%]
+tests/test_deliverable_6_comprehensive.py::TestDenotationalSemantics::test_commutativity_addition PASSED [ 68%]
+tests/test_deliverable_6_comprehensive.py::TestDenotationalSemantics::test_identity_addition PASSED [ 69%]
+tests/test_deliverable_6_comprehensive.py::TestDenotationalSemantics::test_identity_multiplication PASSED [ 70%]
+tests/test_deliverable_6_comprehensive.py::TestAmbiguityHandling::test_synonym_resolution_sum FAILED [ 71%]
+tests/test_deliverable_6_comprehensive.py::TestAmbiguityHandling::test_synonym_resolution_mean PASSED [ 73%]
+tests/test_deliverable_6_comprehensive.py::TestAmbiguityHandling::test_synonym_resolution_product PASSED [ 74%]
+tests/test_deliverable_6_comprehensive.py::TestAmbiguityHandling::test_keyword_vs_value_disambiguation PASSED [ 75%]
+tests/test_deliverable_6_comprehensive.py::TestAmbiguityHandling::test_composition_order_disambiguation FAILED [ 76%]
+tests/test_deliverable_6_comprehensive.py::TestAmbiguityHandling::test_list_delimiter_disambiguation PASSED [ 78%]
+tests/test_deliverable_6_comprehensive.py::TestAmbiguityHandling::test_operator_precedence_disambiguation PASSED [ 79%]
+tests/test_deliverable_6_comprehensive.py::TestAmbiguityHandling::test_parentheses_override_precedence PASSED [ 80%]
+tests/test_deliverable_6_comprehensive.py::TestAmbiguityHandling::test_map_operation_target_disambiguation PASSED [ 81%]
+tests/test_deliverable_6_comprehensive.py::TestAmbiguityHandling::test_reduce_vs_compute_disambiguation PASSED [ 82%]
+tests/test_deliverable_6_comprehensive.py::TestAmbiguityHandling::test_comparison_operator_disambiguation PASSED [ 84%]
+tests/test_deliverable_6_comprehensive.py::TestAmbiguityHandling::test_empty_list_handling PASSED [ 85%]
+tests/test_deliverable_6_comprehensive.py::TestAmbiguityHandling::test_variable_vs_literal_disambiguation PASSED [ 86%]
+tests/test_deliverable_6_comprehensive.py::TestEdgeCases::test_division_by_zero PASSED [ 87%]
+tests/test_deliverable_6_comprehensive.py::TestEdgeCases::test_map_divide_by_zero FAILED [ 89%]
+tests/test_deliverable_6_comprehensive.py::TestEdgeCases::test_operation_on_non_numeric_list PASSED [ 90%]
+tests/test_deliverable_6_comprehensive.py::TestEdgeCases::test_undefined_variable_in_expression PASSED [ 91%]
+tests/test_deliverable_6_comprehensive.py::TestEdgeCases::test_reduce_empty_list_error PASSED [ 92%]
+tests/test_deliverable_6_comprehensive.py::TestEdgeCases::test_map_without_argument PASSED [ 93%]
+tests/test_deliverable_6_comprehensive.py::TestEdgeCases::test_negative_numbers FAILED [ 95%]
+tests/test_deliverable_6_comprehensive.py::TestIntegration::test_complex_data_pipeline FAILED [ 96%]
+tests/test_deliverable_6_comprehensive.py::TestIntegration::test_conditional_with_computation FAILED [ 97%]
+tests/test_deliverable_6_comprehensive.py::TestIntegration::test_nested_expressions PASSED [ 98%]
+tests/test_deliverable_6_comprehensive.py::TestIntegration::test_variable_reuse PASSED [100%]
+
+============================== warnings summary ===============================
+.venv\Lib\site-packages\httplib2\auth.py:19
+  C:\Users\eisra\SPEAKMATH\SpeakMath\.venv\Lib\site-packages\httplib2\auth.py:19: DeprecationWarning: 'setName' deprecated - use 'set_name'
+    token = pp.Word(tchar).setName("token")
+
+.venv\Lib\site-packages\httplib2\auth.py:20
+  C:\Users\eisra\SPEAKMATH\SpeakMath\.venv\Lib\site-packages\httplib2\auth.py:20: DeprecationWarning: 'leaveWhitespace' deprecated - use 'leave_whitespace'
+    token68 = pp.Combine(pp.Word("-._~+/" + pp.nums + pp.alphas) + pp.Optional(pp.Word("=").leaveWhitespace())).setName(
+
+.venv\Lib\site-packages\httplib2\auth.py:20
+  C:\Users\eisra\SPEAKMATH\SpeakMath\.venv\Lib\site-packages\httplib2\auth.py:20: DeprecationWarning: 'setName' deprecated - use 'set_name'
+    token68 = pp.Combine(pp.Word("-._~+/" + pp.nums + pp.alphas) + pp.Optional(pp.Word("=").leaveWhitespace())).setName(
+
+.venv\Lib\site-packages\httplib2\auth.py:24
+  C:\Users\eisra\SPEAKMATH\SpeakMath\.venv\Lib\site-packages\httplib2\auth.py:24: DeprecationWarning: 'setName' deprecated - use 'set_name'
+    quoted_string = pp.dblQuotedString.copy().setName("quoted-string").setParseAction(unquote)
+
+.venv\Lib\site-packages\httplib2\auth.py:24
+  C:\Users\eisra\SPEAKMATH\SpeakMath\.venv\Lib\site-packages\httplib2\auth.py:24: DeprecationWarning: 'setParseAction' deprecated - use 'set_parse_action'
+    quoted_string = pp.dblQuotedString.copy().setName("quoted-string").setParseAction(unquote)
+
+.venv\Lib\site-packages\httplib2\auth.py:25
+  C:\Users\eisra\SPEAKMATH\SpeakMath\.venv\Lib\site-packages\httplib2\auth.py:25: DeprecationWarning: 'setName' deprecated - use 'set_name'
+    auth_param_name = token.copy().setName("auth-param-name").addParseAction(downcaseTokens)
+
+.venv\Lib\site-packages\httplib2\auth.py:25
+  C:\Users\eisra\SPEAKMATH\SpeakMath\.venv\Lib\site-packages\httplib2\auth.py:25: DeprecationWarning: 'addParseAction' deprecated - use 'add_parse_action'
+    auth_param_name = token.copy().setName("auth-param-name").addParseAction(downcaseTokens)
+
+.venv\Lib\site-packages\httplib2\auth.py:27
+  C:\Users\eisra\SPEAKMATH\SpeakMath\.venv\Lib\site-packages\httplib2\auth.py:27: DeprecationWarning: 'delimitedList' deprecated - use 'DelimitedList'
+    params = pp.Dict(pp.delimitedList(pp.Group(auth_param)))
+
+.venv\Lib\site-packages\httplib2\auth.py:33
+  C:\Users\eisra\SPEAKMATH\SpeakMath\.venv\Lib\site-packages\httplib2\auth.py:33: DeprecationWarning: 'delimitedList' deprecated - use 'DelimitedList'
+    www_authenticate = pp.delimitedList(pp.Group(challenge))
+
+src\llm_layer.py:6
+  C:\Users\eisra\SPEAKMATH\SpeakMath\src\llm_layer.py:6: FutureWarning: 
+  
+  All support for the `google.generativeai` package has ended. It will no longer be receiving 
+  updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+  See README for more details:
+  
+  https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+  
+    import google.generativeai as genai
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_deliverable_6_comprehensive.py::TestSortingOperations::test_sort_ascending
+FAILED tests/test_deliverable_6_comprehensive.py::TestSortingOperations::test_sort_descending
+FAILED tests/test_deliverable_6_comprehensive.py::TestMapOperations::test_map_subtract
+FAILED tests/test_deliverable_6_comprehensive.py::TestMapOperations::test_map_divide
+FAILED tests/test_deliverable_6_comprehensive.py::TestReduceOperations::test_reduce_max
+FAILED tests/test_deliverable_6_comprehensive.py::TestReduceOperations::test_reduce_min
+FAILED tests/test_deliverable_6_comprehensive.py::TestFilterOperations::test_filter_greater_than
+FAILED tests/test_deliverable_6_comprehensive.py::TestFilterOperations::test_filter_less_than
+FAILED tests/test_deliverable_6_comprehensive.py::TestFilterOperations::test_filter_equals
+FAILED tests/test_deliverable_6_comprehensive.py::TestFilterOperations::test_filter_no_matches
+FAILED tests/test_deliverable_6_comprehensive.py::TestCompositionOperations::test_map_then_reduce
+FAILED tests/test_deliverable_6_comprehensive.py::TestCompositionOperations::test_sort_then_compute
+FAILED tests/test_deliverable_6_comprehensive.py::TestCompositionOperations::test_filter_then_map
+FAILED tests/test_deliverable_6_comprehensive.py::TestAmbiguityHandling::test_synonym_resolution_sum
+FAILED tests/test_deliverable_6_comprehensive.py::TestAmbiguityHandling::test_composition_order_disambiguation
+FAILED tests/test_deliverable_6_comprehensive.py::TestEdgeCases::test_map_divide_by_zero
+FAILED tests/test_deliverable_6_comprehensive.py::TestEdgeCases::test_negative_numbers
+FAILED tests/test_deliverable_6_comprehensive.py::TestIntegration::test_complex_data_pipeline
+FAILED tests/test_deliverable_6_comprehensive.py::TestIntegration::test_conditional_with_computation
+================= 19 failed, 63 passed, 10 warnings in 2.89s ==================
