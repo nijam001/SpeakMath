@@ -96,7 +96,6 @@ class Parser:
         # Check if there's a "then" keyword for composition
         if self.cur().type == "THEN":
             self.eat("THEN")
-            self.eat("THEN")
             second_cmd = self.parse_single_command()
             seq_node = ast.SequenceNode(first_cmd, second_cmd)
             # Sequence covers full range? Or just combined? 
@@ -306,7 +305,19 @@ class Parser:
             self.eat("OVER_ON")
         target = self.parse_expression_or_target()
         
-        op, reasoning, is_llm = self._resolve_op_phrase(op_phrase, default_op="OP_MAP")
+        # For map operations, use the operation phrase directly for known operations
+        # This ensures subtract, divide, add, multiply are passed correctly to interpreter
+        map_ops = {"add": "add", "subtract": "subtract", "minus": "subtract", 
+                   "multiply": "multiply", "product": "multiply",
+                   "divide": "divide", "division": "divide",
+                   "sum": "add"}
+        
+        if op_phrase in map_ops:
+            op = map_ops[op_phrase]
+            is_llm = False
+            reasoning = None
+        else:
+            op, reasoning, is_llm = self._resolve_op_phrase(op_phrase, default_op="OP_MAP")
         
         source = "AI" if is_llm else "Local"
         metadata = {
@@ -319,7 +330,8 @@ class Parser:
     def parse_reduce(self):
         self.eat("REDUCE")
         op_tok = self.cur()
-        if op_tok.type in ("IDENTIFIER","SUM","PRODUCT"):
+        # Allow SUM, PRODUCT, MAX, MIN, and IDENTIFIER tokens for reduce operations
+        if op_tok.type in ("IDENTIFIER", "SUM", "PRODUCT", "MAX", "MIN"):
             op_phrase = self.eat(op_tok.type).value.lower()
         else:
             raise ParseError("Expected operation after reduce")
@@ -327,7 +339,17 @@ class Parser:
             self.eat("OVER_ON")
         target = self.parse_expression_or_target()
         
-        op, reasoning, is_llm = self._resolve_op_phrase(op_phrase, default_op="OP_REDUCE")
+        # For reduce operations, use operation phrase directly for known operations
+        reduce_ops = {"sum": "sum", "add": "sum", "product": "product", 
+                      "multiply": "product", "max": "max", "min": "min",
+                      "maximum": "max", "minimum": "min"}
+        
+        if op_phrase in reduce_ops:
+            op = reduce_ops[op_phrase]
+            is_llm = False
+            reasoning = None
+        else:
+            op, reasoning, is_llm = self._resolve_op_phrase(op_phrase, default_op="OP_REDUCE")
         
         source = "AI" if is_llm else "Local"
         metadata = {
@@ -466,4 +488,48 @@ class Parser:
             self.eat("LPAREN"); node = self.parse_expression(); self.eat("RPAREN"); return node
         if c.type == "LBRACK":
             return self.parse_list_bracket()
+        # Handle unary minus for negative numbers
+        if c.type == "ADDOP" and c.value == "-":
+            self.eat("ADDOP")
+            operand = self.parse_factor()
+            return ast.BinaryOpNode(ast.NumberNode(0), "-", operand)
+        # Handle aggregate operations as expressions (mean, sum, product, max, min)
+        if c.type in ("SUM", "MEAN", "PRODUCT", "MAX", "MIN"):
+            return self.parse_aggregate_expression()
+        # Handle filter as expression
+        if c.type == "FILTER":
+            return self.parse_filter()
+        # Handle map as expression
+        if c.type == "MAP":
+            return self.parse_map()
+        # Handle reduce as expression
+        if c.type == "REDUCE":
+            return self.parse_reduce()
         raise ParseError("Unexpected token in factor: "+str(c))
+    
+    def parse_aggregate_expression(self):
+        """Parse aggregate operations (sum, mean, product, max, min) as expressions."""
+        c = self.cur()
+        op_map = {
+            "SUM": "OP_SUM",
+            "MEAN": "OP_MEAN", 
+            "PRODUCT": "OP_PRODUCT",
+            "MAX": "OP_MAX",
+            "MIN": "OP_MIN"
+        }
+        op = op_map.get(c.type, "OP_SUM")
+        self.eat(c.type)
+        
+        # Skip optional 'of' keyword
+        if self.cur().type == "IDENTIFIER" and self.cur().value.lower() == "of":
+            self.eat("IDENTIFIER")
+        
+        # Parse the target (list or variable)
+        target = self.parse_expression_or_target()
+        
+        metadata = {
+            "original_phrase": c.value.lower(),
+            "reasoning": None,
+            "source": "Local"
+        }
+        return ast.ComputeNode(op, target, is_llm_resolved=False, llm_metadata=metadata)

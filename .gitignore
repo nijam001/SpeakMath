@@ -16,3 +16,5 @@ ENV/
 # SpeakMath artifacts
 debug_*.py
 # *.log
+
+# docs/

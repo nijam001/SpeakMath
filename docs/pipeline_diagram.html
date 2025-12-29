@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeakMath Pipeline Diagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 40px;
+            color: #fff;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+        
+        .pipeline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 50px;
+        }
+        
+        .stage {
+            background: linear-gradient(145deg, #1e293b, #334155);
+            border: 2px solid #3b82f6;
+            border-radius: 16px;
+            padding: 25px 20px;
+            min-width: 140px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .stage:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(59, 130, 246, 0.3);
+        }
+        
+        .stage-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .stage-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 5px;
+        }
+        
+        .stage-desc {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+        
+        .arrow {
+            font-size: 2rem;
+            color: #3b82f6;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .llm-branch {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        
+        .llm-box {
+            background: linear-gradient(145deg, #7c3aed, #a855f7);
+            border: 2px solid #a855f7;
+            border-radius: 16px;
+            padding: 20px 15px;
+            min-width: 130px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(168, 85, 247, 0.3);
+            margin-top: 10px;
+        }
+        
+        .llm-label {
+            font-size: 0.75rem;
+            color: #c4b5fd;
+            margin-bottom: 5px;
+        }
+        
+        .details-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+        
+        .detail-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #475569;
+            border-radius: 12px;
+            padding: 25px;
+        }
+        
+        .detail-card h3 {
+            color: #3b82f6;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .detail-card ul {
+            list-style: none;
+        }
+        
+        .detail-card li {
+            padding: 8px 0;
+            border-bottom: 1px solid #334155;
+            color: #cbd5e1;
+            font-size: 0.95rem;
+        }
+        
+        .detail-card li:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-card code {
+            background: #1e293b;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            color: #22d3ee;
+            font-size: 0.85rem;
+        }
+        
+        .example-section {
+            margin-top: 40px;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid #475569;
+        }
+        
+        .example-section h2 {
+            color: #3b82f6;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .example-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .example-step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #1e293b;
+            border-radius: 10px;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .step-num {
+            background: #3b82f6;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-label {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+        
+        .step-value {
+            font-family: 'Consolas', monospace;
+            color: #22d3ee;
+            font-size: 0.95rem;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .stage {
+                border-color: #333;
+                background: #f0f0f0;
+            }
+            .stage-name, .stage-desc {
+                color: #333;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 SpeakMath Pipeline Architecture</h1>
+        <p class="subtitle">Natural Language to Mathematical Computation</p>
+        
+        <!-- Main Pipeline -->
+        <div class="pipeline">
+            <div class="stage">
+                <div class="stage-icon">📝</div>
+                <div class="stage-name">Input</div>
+                <div class="stage-desc">User Command</div>
+            </div>
+            
+            <div class="arrow">→</div>
+            
+            <div class="stage">
+                <div class="stage-icon">🔤</div>
+                <div class="stage-name">Lexer</div>
+                <div class="stage-desc">Tokenization</div>
+            </div>
+            
+            <div class="arrow">→</div>
+            
+            <div class="llm-branch">
+                <div class="stage">
+                    <div class="stage-icon">🌳</div>
+                    <div class="stage-name">Parser</div>
+                    <div class="stage-desc">AST Generation</div>
+                </div>
+                <div class="arrow" style="transform: rotate(90deg); margin: 5px 0;">↓</div>
+                <div class="llm-box">
+                    <div class="llm-label">If ambiguous</div>
+                    <div class="stage-icon" style="font-size: 1.5rem;">🤖</div>
+                    <div class="stage-name" style="font-size: 0.95rem;">LLM Fallback</div>
+                </div>
+            </div>
+            
+            <div class="arrow">→</div>
+            
+            <div class="stage">
+                <div class="stage-icon">🌲</div>
+                <div class="stage-name">AST</div>
+                <div class="stage-desc">Abstract Syntax Tree</div>
+            </div>
+            
+            <div class="arrow">→</div>
+            
+            <div class="stage">
+                <div class="stage-icon">⚙️</div>
+                <div class="stage-name">Interpreter</div>
+                <div class="stage-desc">Execution</div>
+            </div>
+            
+            <div class="arrow">→</div>
+            
+            <div class="stage" style="border-color: #22c55e;">
+                <div class="stage-icon">✅</div>
+                <div class="stage-name">Output</div>
+                <div class="stage-desc">Result</div>
+            </div>
+        </div>
+        
+        <!-- Details Section -->
+        <div class="details-section">
+            <div class="detail-card">
+                <h3>🔤 Lexer</h3>
+                <ul>
+                    <li>Tokenizes input into <code>NUMBER</code>, <code>IDENTIFIER</code>, <code>OPERATOR</code></li>
+                    <li>Recognizes keywords: <code>set</code>, <code>if</code>, <code>then</code>, <code>map</code>, <code>reduce</code></li>
+                    <li>Handles lists with <code>LBRACK</code>, <code>RBRACK</code>, <code>COMMA</code></li>
+                </ul>
+            </div>
+            
+            <div class="detail-card">
+                <h3>🌳 Parser</h3>
+                <ul>
+                    <li>Builds AST from token stream</li>
+                    <li>Supports: assignments, conditionals, functional ops</li>
+                    <li>Resolves phrases via semantic map</li>
+                    <li>Falls back to LLM for ambiguous phrases</li>
+                </ul>
+            </div>
+            
+            <div class="detail-card">
+                <h3>🤖 LLM Fallback</h3>
+                <ul>
+                    <li>Activated when semantic map fails</li>
+                    <li>Uses Google Gemini API</li>
+                    <li>Maps natural language → operators</li>
+                    <li>Example: "tally up" → <code>OP_SUM</code></li>
+                </ul>
+            </div>
+            
+            <div class="detail-card">
+                <h3>⚙️ Interpreter</h3>
+                <ul>
+                    <li>Evaluates AST nodes recursively</li>
+                    <li>Manages variable environment</li>
+                    <li>Executes: <code>map</code>, <code>reduce</code>, <code>filter</code></li>
+                    <li>Supports function composition</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Example Flow -->
+        <div class="example-section">
+            <h2>📌 Example: "sum [10, 20, 30]"</h2>
+            <div class="example-flow">
+                <div class="example-step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <div class="step-label">Input</div>
+                        <div class="step-value">"sum [10, 20, 30]"</div>
+                    </div>
+                </div>
+                <div class="example-step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <div class="step-label">Lexer Output</div>
+                        <div class="step-value">SUM(sum), LBRACK([), NUMBER(10), COMMA(,), NUMBER(20), COMMA(,), NUMBER(30), RBRACK(]), EOF()</div>
+                    </div>
+                </div>
+                <div class="example-step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <div class="step-label">Parser → AST</div>
+                        <div class="step-value">ComputeNode(op=OP_SUM, target=ListNode([10, 20, 30]))</div>
+                    </div>
+                </div>
+                <div class="example-step">
+                    <div class="step-num">4</div>
+                    <div class="step-content">
+                        <div class="step-label">Interpreter Execution</div>
+                        <div class="step-value">sum([10, 20, 30]) = 10 + 20 + 30</div>
+                    </div>
+                </div>
+                <div class="example-step" style="border-left-color: #22c55e;">
+                    <div class="step-num" style="background: #22c55e;">5</div>
+                    <div class="step-content">
+                        <div class="step-label">Output</div>
+                        <div class="step-value" style="color: #22c55e; font-size: 1.2rem; font-weight: bold;">60</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>SpeakMath - Natural Language Math Interpreter | Deliverable 7 - Pipeline Architecture</p>
+        </div>
+    </div>
+</body>
+</html>
+

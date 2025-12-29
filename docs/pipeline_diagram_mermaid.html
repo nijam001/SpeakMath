@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeakMath Pipeline - Mermaid Diagrams</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #e2e8f0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+        
+        .diagram-section {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #475569;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .diagram-section h2 {
+            color: #3b82f6;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .mermaid {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+        }
+        
+        .description {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.95rem;
+            color: #cbd5e1;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .nav a {
+            padding: 8px 16px;
+            background: #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .nav a:hover {
+            background: #3b82f6;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            .diagram-section {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 SpeakMath Pipeline Architecture</h1>
+        <p class="subtitle">Interactive Mermaid.js Diagrams</p>
+        
+        <nav class="nav">
+            <a href="#main">Main Pipeline</a>
+            <a href="#detailed">Detailed</a>
+            <a href="#example">Example</a>
+            <a href="#composition">Composition</a>
+            <a href="#llm">LLM Fallback</a>
+            <a href="#ast">AST Classes</a>
+        </nav>
+        
+        <!-- Main Pipeline -->
+        <div id="main" class="diagram-section">
+            <h2>📊 Main Pipeline Flow</h2>
+            <pre class="mermaid">
+flowchart LR
+    subgraph Input
+        A["📝 User Command"]
+    end
+    
+    subgraph Processing
+        B["🔤 Lexer"]
+        C["🌳 Parser"]
+        D["🌲 AST"]
+        E["⚙️ Interpreter"]
+    end
+    
+    subgraph Fallback
+        F["🤖 LLM Fallback"]
+        G["📚 Semantic Map"]
+    end
+    
+    subgraph Output
+        H["✅ Result"]
+    end
+    
+    A --> B
+    B -->|Tokens| C
+    C -->|"if ambiguous"| G
+    G -->|"not found"| F
+    F -->|"resolved op"| C
+    G -->|"found"| C
+    C -->|AST Node| D
+    D --> E
+    E --> H
+    
+    style A fill:#3b82f6,stroke:#1e40af,color:#fff
+    style B fill:#1e293b,stroke:#3b82f6,color:#e2e8f0
+    style C fill:#1e293b,stroke:#3b82f6,color:#e2e8f0
+    style D fill:#1e293b,stroke:#3b82f6,color:#e2e8f0
+    style E fill:#1e293b,stroke:#3b82f6,color:#e2e8f0
+    style F fill:#7c3aed,stroke:#a855f7,color:#fff
+    style G fill:#475569,stroke:#64748b,color:#e2e8f0
+    style H fill:#22c55e,stroke:#16a34a,color:#fff
+            </pre>
+            <div class="description">
+                <strong>Pipeline Overview:</strong> User input flows through the Lexer (tokenization), Parser (AST generation), 
+                and Interpreter (execution). When the Parser encounters ambiguous phrases, it consults the Semantic Map first, 
+                then falls back to the LLM if needed.
+            </div>
+        </div>
+        
+        <!-- Detailed Architecture -->
+        <div id="detailed" class="diagram-section">
+            <h2>🏗️ Detailed System Architecture</h2>
+            <pre class="mermaid">
+flowchart TB
+    subgraph USER["👤 USER INTERFACE"]
+        CLI["CLI/REPL"]
+        UI["Streamlit UI"]
+    end
+    
+    subgraph LEXER["🔤 LEXER"]
+        L1["Tokenize Input"]
+        L2["Identify Keywords"]
+        L3["Extract Numbers"]
+    end
+    
+    subgraph PARSER["🌳 PARSER"]
+        P1["Build AST"]
+        P2["Resolve Phrases"]
+        P3["Handle Precedence"]
+    end
+    
+    subgraph SEMANTIC["📚 SEMANTIC RESOLUTION"]
+        SM["Semantic Map"]
+        LLM["LLM Fallback"]
+    end
+    
+    subgraph AST["🌲 AST NODES"]
+        N1["ComputeNode"]
+        N2["MapNode"]
+        N3["ReduceNode"]
+        N4["FilterNode"]
+    end
+    
+    subgraph INTERPRETER["⚙️ INTERPRETER"]
+        I1["Evaluate AST"]
+        I2["Execute Ops"]
+        I3["Manage Vars"]
+    end
+    
+    subgraph OUTPUT["✅ OUTPUT"]
+        O1["Result"]
+    end
+    
+    CLI --> L1
+    UI --> L1
+    L1 --> L2 --> L3
+    L3 --> P1
+    P1 --> P2
+    P2 --> SM
+    SM -->|"not found"| LLM
+    LLM --> P2
+    SM --> P3
+    P3 --> N1 & N2 & N3 & N4
+    N1 & N2 & N3 & N4 --> I1
+    I1 --> I2 --> I3
+    I3 --> O1
+    
+    style CLI fill:#3b82f6,stroke:#1e40af,color:#fff
+    style UI fill:#3b82f6,stroke:#1e40af,color:#fff
+    style LLM fill:#7c3aed,stroke:#a855f7,color:#fff
+    style O1 fill:#22c55e,stroke:#16a34a,color:#fff
+            </pre>
+            <div class="description">
+                <strong>Components:</strong> The system supports both CLI and Streamlit interfaces. 
+                The Lexer tokenizes input, the Parser builds AST nodes, and the Interpreter evaluates them.
+                Semantic resolution uses a local map first, then LLM for unknown phrases.
+            </div>
+        </div>
+        
+        <!-- Example Execution -->
+        <div id="example" class="diagram-section">
+            <h2>🔬 Example: sum [10, 20, 30]</h2>
+            <pre class="mermaid">
+flowchart LR
+    subgraph Step1["1️⃣ INPUT"]
+        A["sum [10, 20, 30]"]
+    end
+    
+    subgraph Step2["2️⃣ LEXER"]
+        B["SUM, LBRACK,<br/>NUMBER(10),<br/>COMMA,<br/>NUMBER(20),<br/>COMMA,<br/>NUMBER(30),<br/>RBRACK, EOF"]
+    end
+    
+    subgraph Step3["3️⃣ PARSER"]
+        C["ComputeNode<br/>op=OP_SUM"]
+    end
+    
+    subgraph Step4["4️⃣ AST"]
+        D["ComputeNode"]
+        E["ListNode"]
+        F["10"] 
+        G["20"]
+        H["30"]
+    end
+    
+    subgraph Step5["5️⃣ INTERPRET"]
+        I["sum([10,20,30])"]
+    end
+    
+    subgraph Step6["6️⃣ OUTPUT"]
+        J["60"]
+    end
+    
+    A --> B --> C
+    C --> D
+    D --> E
+    E --> F & G & H
+    D --> I --> J
+    
+    style A fill:#3b82f6,stroke:#1e40af,color:#fff
+    style J fill:#22c55e,stroke:#16a34a,color:#fff
+            </pre>
+            <div class="description">
+                <strong>Execution Trace:</strong> The input "sum [10, 20, 30]" is tokenized, parsed into a ComputeNode 
+                with OP_SUM operation and a ListNode target, then evaluated to produce the result 60.
+            </div>
+        </div>
+        
+        <!-- Function Composition -->
+        <div id="composition" class="diagram-section">
+            <h2>🔗 Function Composition: map add 5 then reduce sum</h2>
+            <pre class="mermaid">
+flowchart LR
+    subgraph Input
+        A["[1, 2, 3]"]
+    end
+    
+    subgraph Map["MAP add 5"]
+        B["1 + 5 = 6"]
+        C["2 + 5 = 7"]
+        D["3 + 5 = 8"]
+    end
+    
+    subgraph Intermediate
+        E["[6, 7, 8]"]
+    end
+    
+    subgraph Reduce["REDUCE sum"]
+        F["6 + 7 + 8"]
+    end
+    
+    subgraph Output
+        G["21"]
+    end
+    
+    A --> B & C & D
+    B & C & D --> E
+    E --> F --> G
+    
+    style A fill:#3b82f6,stroke:#1e40af,color:#fff
+    style E fill:#f59e0b,stroke:#d97706,color:#000
+    style G fill:#22c55e,stroke:#16a34a,color:#fff
+            </pre>
+            <div class="description">
+                <strong>Composition:</strong> The "then" keyword enables function composition. 
+                First, map adds 5 to each element [1,2,3] → [6,7,8]. 
+                Then, reduce sums the result [6,7,8] → 21.
+            </div>
+        </div>
+        
+        <!-- LLM Fallback -->
+        <div id="llm" class="diagram-section">
+            <h2>🤖 LLM Fallback Flow</h2>
+            <pre class="mermaid">
+flowchart TB
+    A["Natural Language Input<br/>'find the biggest number'"] --> B{"Semantic Map<br/>Lookup"}
+    B -->|"Found"| C["Return Operator"]
+    B -->|"Not Found"| D["LLM Fallback"]
+    
+    D --> E["Send to Gemini API"]
+    E --> F["Parse JSON Response"]
+    F --> G{"Valid Operator?"}
+    G -->|"Yes"| H["Return OP_MAX"]
+    G -->|"No"| I["Return UNKNOWN"]
+    
+    C --> J["Continue Parsing"]
+    H --> J
+    I --> K["Raise Error"]
+    
+    style A fill:#3b82f6,stroke:#1e40af,color:#fff
+    style D fill:#7c3aed,stroke:#a855f7,color:#fff
+    style E fill:#7c3aed,stroke:#a855f7,color:#fff
+    style H fill:#22c55e,stroke:#16a34a,color:#fff
+    style K fill:#ef4444,stroke:#dc2626,color:#fff
+            </pre>
+            <div class="description">
+                <strong>LLM Fallback:</strong> When the semantic map cannot resolve a phrase, 
+                the system sends it to Google Gemini API. The LLM returns a JSON response with 
+                the operator and reasoning, which is validated before use.
+            </div>
+        </div>
+        
+        <!-- AST Classes -->
+        <div id="ast" class="diagram-section">
+            <h2>📦 AST Node Class Hierarchy</h2>
+            <pre class="mermaid">
+classDiagram
+    class ASTNode {
+        &lt;&lt;abstract&gt;&gt;
+    }
+    
+    class NumberNode {
+        +float value
+    }
+    
+    class VariableNode {
+        +string name
+    }
+    
+    class ListNode {
+        +list values
+    }
+    
+    class BinaryOpNode {
+        +ASTNode left
+        +string op
+        +ASTNode right
+    }
+    
+    class ComputeNode {
+        +string op
+        +ASTNode target
+        +dict llm_metadata
+    }
+    
+    class MapNode {
+        +string op
+        +float arg
+        +ASTNode target
+    }
+    
+    class ReduceNode {
+        +string op
+        +ASTNode target
+    }
+    
+    class FilterNode {
+        +string op
+        +ASTNode value
+        +ASTNode target
+    }
+    
+    class SequenceNode {
+        +ASTNode first
+        +ASTNode second
+    }
+    
+    ASTNode <|-- NumberNode
+    ASTNode <|-- VariableNode
+    ASTNode <|-- ListNode
+    ASTNode <|-- BinaryOpNode
+    ASTNode <|-- ComputeNode
+    ASTNode <|-- MapNode
+    ASTNode <|-- ReduceNode
+    ASTNode <|-- FilterNode
+    ASTNode <|-- SequenceNode
+            </pre>
+            <div class="description">
+                <strong>AST Nodes:</strong> The Abstract Syntax Tree uses typed nodes for different operations.
+                NumberNode/VariableNode/ListNode represent values. ComputeNode handles aggregate operations.
+                MapNode/ReduceNode/FilterNode implement functional programming patterns.
+                SequenceNode enables function composition with "then".
+            </div>
+        </div>
+        
+        <!-- Simple Linear Pipeline for Poster -->
+        <div id="poster" class="diagram-section">
+            <h2>🎯 Simple Pipeline (For Poster)</h2>
+            <pre class="mermaid">
+flowchart LR
+    A["📝 Input"] --> B["🔤 Lexer"] --> C["🌳 Parser"] --> D["🌲 AST"] --> E["⚙️ Interpreter"] --> F["✅ Output"]
+    
+    C -.->|ambiguous| G["🤖 LLM"]
+    G -.-> C
+    
+    style A fill:#3b82f6,stroke:#1e40af,color:#fff
+    style B fill:#1e293b,stroke:#3b82f6,color:#e2e8f0
+    style C fill:#1e293b,stroke:#3b82f6,color:#e2e8f0
+    style D fill:#1e293b,stroke:#3b82f6,color:#e2e8f0
+    style E fill:#1e293b,stroke:#3b82f6,color:#e2e8f0
+    style F fill:#22c55e,stroke:#16a34a,color:#fff
+    style G fill:#7c3aed,stroke:#a855f7,color:#fff
+            </pre>
+            <div class="description">
+                <strong>Simplified View:</strong> A clean, linear representation of the pipeline 
+                suitable for poster presentations. Shows the main flow with LLM fallback as a dotted line.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>SpeakMath - Natural Language Math Interpreter | Deliverable 7 - Pipeline Architecture</p>
+            <p style="margin-top: 10px; font-size: 0.8rem;">Powered by Mermaid.js</p>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize Mermaid with dark theme
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#3b82f6',
+                primaryTextColor: '#e2e8f0',
+                primaryBorderColor: '#3b82f6',
+                lineColor: '#64748b',
+                secondaryColor: '#1e293b',
+                tertiaryColor: '#334155',
+                background: '#1e293b',
+                mainBkg: '#1e293b',
+                nodeBorder: '#3b82f6',
+                clusterBkg: '#334155',
+                clusterBorder: '#475569',
+                titleColor: '#e2e8f0',
+                edgeLabelBackground: '#1e293b'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>
